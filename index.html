@@ -58,7 +58,7 @@
 
           const calculos = useMemo(() => {
             const estructura = [];
-            let vgTotalAcumulado = 0;
+            let vgTotalAcumulado = vg; // Sumar mi propia compra
             
             for (let nivel = 1; nivel <= niveles; nivel++) {
               const personas = Math.pow(directos, nivel);
