@@ -35,15 +35,7 @@
           const [vg, setVg] = useState(0);
           const [showDisclaimer, setShowDisclaimer] = useState(true);
 
-          useEffect(() => {
-            const accepted = localStorage.getItem('nnprotect-disclaimer-accepted');
-            if (accepted) {
-              setShowDisclaimer(false);
-            }
-          }, []);
-
           const handleAcceptDisclaimer = () => {
-            localStorage.setItem('nnprotect-disclaimer-accepted', 'true');
             setShowDisclaimer(false);
           };
 
@@ -455,9 +447,14 @@
                               <div>
                                 <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
                                 <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Rango: <span className="font-semibold">{det.rangoPersona}</span> ({det.infinitoPersona}%)
+                                </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm text-gray-600">{det.diferenciador}%</p>
+                                <p className="text-sm text-gray-600">
+                                  {det.miInfinito}% - {det.infinitoPersona}% = {det.diferenciador}%
+                                </p>
                                 <p className="font-bold text-purple-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                               </div>
                             </div>
