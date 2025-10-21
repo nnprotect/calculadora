@@ -98,30 +98,59 @@
             const detalleInfinito = [];
             
             if (niveles > 9 && miRango.infinito > 0) {
+              const directosInfo = [];
+              const personasNivel1 = estructura[0].personas;
+              
+              for (let d = 0; d < personasNivel1; d++) {
+                let vgDirecto = vg;
+                for (let i = 1; i < niveles; i++) {
+                  vgDirecto += Math.pow(directos, i - 1) * vg;
+                }
+                const rangoDirecto = calcularRango(vgDirecto);
+                directosInfo.push(rangoDirecto);
+              }
+              
               for (let i = 9; i < niveles; i++) {
                 const personas = estructura[i].personas;
+                const personasPorDirecto = personas / personasNivel1;
                 
-                let vgPorPersona = vg;
-                for (let j = i + 1; j < niveles; j++) {
-                  vgPorPersona += Math.pow(directos, j - i) * vg;
+                let comisionNivel = 0;
+                
+                for (let d = 0; d < personasNivel1; d++) {
+                  const rangoDirecto = directosInfo[d];
+                  const diferenciador = Math.max(0, miRango.infinito - rangoDirecto.infinito);
+                  
+                  if (diferenciador > 0) {
+                    comisionNivel += personasPorDirecto * vn * (diferenciador / 100);
+                  }
                 }
                 
-                const rangoPersona = calcularRango(vgPorPersona);
-                
-                const diferenciador = Math.max(0, miRango.infinito - rangoPersona.infinito);
-                
-                if (diferenciador > 0) {
-                  const comision = personas * vn * (diferenciador / 100);
-                  bonoInfinito += comision;
+                if (comisionNivel > 0) {
+                  bonoInfinito += comisionNivel;
+                  
+                  const diferenciales = {};
+                  directosInfo.forEach(r => {
+                    const dif = Math.max(0, miRango.infinito - r.infinito);
+                    const key = `${r.nombre}-${dif}`;
+                    if (!diferenciales[key]) {
+                      diferenciales[key] = {
+                        rango: r.nombre,
+                        infinito: r.infinito,
+                        diferencial: dif,
+                        cantidad: 0
+                      };
+                    }
+                    diferenciales[key].cantidad++;
+                  });
+                  
+                  const detalleDiferenciales = Object.values(diferenciales);
                   
                   detalleInfinito.push({
                     nivel: i + 1,
                     personas,
-                    rangoPersona: rangoPersona.nombre,
                     miInfinito: miRango.infinito,
-                    infinitoPersona: rangoPersona.infinito,
-                    diferenciador,
-                    comision
+                    detalleDiferenciales,
+                    comision: comisionNivel
                   });
                 }
               }
@@ -437,19 +466,23 @@
                       <>
                         <div className="space-y-2 max-h-96 overflow-y-auto">
                           {calculos.detalleInfinito.map((det) => (
-                            <div key={det.nivel} className="flex justify-between items-center bg-purple-50 p-3 rounded-lg">
-                              <div>
-                                <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
-                                <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
-                                <p className="text-xs text-gray-600 mt-1">
-                                  Rango: <span className="font-semibold">{det.rangoPersona}</span> ({det.infinitoPersona}%)
-                                </p>
+                            <div key={det.nivel} className="bg-purple-50 p-3 rounded-lg">
+                              <div className="flex justify-between items-center mb-2">
+                                <div>
+                                  <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
+                                  <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-purple-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm text-gray-600">
-                                  {det.miInfinito}% - {det.infinitoPersona}% = {det.diferenciador}%
-                                </p>
-                                <p className="font-bold text-purple-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                              <div className="text-xs text-gray-600 space-y-1">
+                                <p className="font-semibold">Breakaway por directos:</p>
+                                {det.detalleDiferenciales.map((dif, idx) => (
+                                  <div key={idx} className="pl-3">
+                                    <span className="font-medium">{dif.rango}</span> ({dif.cantidad}x): {det.miInfinito}% - {dif.infinito}% = <span className="font-bold text-purple-700">{dif.diferencial}%</span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           ))}
