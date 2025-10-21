@@ -35,7 +35,15 @@
           const [vg, setVg] = useState(0);
           const [showDisclaimer, setShowDisclaimer] = useState(true);
 
+          useEffect(() => {
+            const accepted = localStorage.getItem('nnprotect-disclaimer-accepted');
+            if (accepted) {
+              setShowDisclaimer(false);
+            }
+          }, []);
+
           const handleAcceptDisclaimer = () => {
+            localStorage.setItem('nnprotect-disclaimer-accepted', 'true');
             setShowDisclaimer(false);
           };
 
@@ -240,6 +248,11 @@
                           <li><strong>NO</strong> sugiera que son resultados típicos</li>
                           <li><strong>SÍ</strong> deje claro que son proyecciones hipotéticas</li>
                         </ul>
+
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-6">
+                          <p className="font-bold text-blue-900">📋 Nota Importante:</p>
+                          <p className="text-blue-800 mt-2">Esta herramienta NO ha sido creada, patrocinada ni avalada oficialmente por NN Protect.</p>
+                        </div>
                       </div>
 
                       <div className="border-t-2 border-gray-200 pt-6">
@@ -442,14 +455,9 @@
                               <div>
                                 <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
                                 <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
-                                <p className="text-xs text-gray-600 mt-1">
-                                  Rango: <span className="font-semibold">{det.rangoPersona}</span> ({det.infinitoPersona}%)
-                                </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm text-gray-600">
-                                  {det.miInfinito}% - {det.infinitoPersona}% = {det.diferenciador}%
-                                </p>
+                                <p className="text-sm text-gray-600">{det.diferenciador}%</p>
                                 <p className="font-bold text-purple-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                               </div>
                             </div>
