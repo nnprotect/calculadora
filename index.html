@@ -20,32 +20,18 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
+        const { useState, useMemo } = React;
 
         const Calculator = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="14"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>;
         const Users = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
         const TrendingUp = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
         const Award = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>;
-        const AlertTriangle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
 
         const NNProtectCalculator = () => {
           const [directos, setDirectos] = useState(0);
           const [niveles, setNiveles] = useState(0);
           const [vn, setVn] = useState(0);
           const [vg, setVg] = useState(0);
-          const [showDisclaimer, setShowDisclaimer] = useState(true);
-
-          useEffect(() => {
-            const accepted = localStorage.getItem('nnprotect-disclaimer-accepted');
-            if (accepted) {
-              setShowDisclaimer(false);
-            }
-          }, []);
-
-          const handleAcceptDisclaimer = () => {
-            localStorage.setItem('nnprotect-disclaimer-accepted', 'true');
-            setShowDisclaimer(false);
-          };
 
           const rangos = [
             { nombre: 'Visionario', vgRequerido: 1465, unilevelNiveles: 3, infinito: 0 },
@@ -106,25 +92,23 @@
               for (let i = 9; i < niveles; i++) {
                 const personas = estructura[i].personas;
                 
-                let vgPorPersona = vg;
-                for (let j = i + 1; j < niveles; j++) {
+                let vgPorPersona = 0;
+                for (let j = i; j < niveles; j++) {
                   vgPorPersona += Math.pow(directos, j - i) * vg;
                 }
                 
                 const rangoPersona = calcularRango(vgPorPersona);
+                const diferenciador = rangoPersona.infinito > 0 ? 
+                  Math.max(0, miRango.infinito - rangoPersona.infinito) : 
+                  miRango.infinito;
                 
-                const diferenciador = Math.max(0, miRango.infinito - rangoPersona.infinito);
+                const comision = personas * vn * (diferenciador / 100);
+                bonoInfinito += comision;
                 
                 if (diferenciador > 0) {
-                  const comision = personas * vn * (diferenciador / 100);
-                  bonoInfinito += comision;
-                  
                   detalleInfinito.push({
                     nivel: i + 1,
                     personas,
-                    rangoPersona: rangoPersona.nombre,
-                    miInfinito: miRango.infinito,
-                    infinitoPersona: rangoPersona.infinito,
                     diferenciador,
                     comision
                   });
@@ -197,98 +181,6 @@
 
           return (
             <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6">
-              {showDisclaimer && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                  <div className="bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 rounded-t-2xl">
-                      <div className="flex items-center gap-3 text-white">
-                        <AlertTriangle className="w-10 h-10" />
-                        <h2 className="text-3xl font-bold">AVISO LEGAL IMPORTANTE</h2>
-                      </div>
-                    </div>
-                    
-                    <div className="p-8 space-y-6">
-                      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                        <p className="font-bold text-red-800 text-lg">⚠️ DESCARGO DE RESPONSABILIDAD</p>
-                        <p className="text-red-700 mt-2">Los resultados mostrados son PROYECCIONES TEÓRICAS únicamente. NO GARANTIZAN ganancias reales.</p>
-                      </div>
-
-                      <div className="space-y-4 text-gray-700">
-                        <h3 className="font-bold text-xl text-gray-900">1. Propósito de la Herramienta</h3>
-                        <p>Esta calculadora es una <strong>herramienta de simulación</strong> con fines educativos e ilustrativos. Su objetivo es ayudar a comprender la estructura del Plan de Compensación de NN Protect.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">2. No Garantía de Resultados</h3>
-                        <p>Los resultados reales pueden variar significativamente debido a:</p>
-                        <ul className="list-disc list-inside pl-4 space-y-1">
-                          <li>Desempeño individual de cada distribuidor</li>
-                          <li>Condiciones del mercado</li>
-                          <li>Esfuerzo y dedicación personal</li>
-                          <li>Habilidades de ventas y liderazgo</li>
-                          <li>Factores económicos externos</li>
-                        </ul>
-
-                        <h3 className="font-bold text-xl text-gray-900">3. Exactitud de los Cálculos</h3>
-                        <p>Esta herramienta es una <strong>simplificación</strong> del Plan de Compensación oficial y puede no reflejar todas las reglas y condiciones. <strong>Siempre consulte la documentación oficial de NN Protect.</strong></p>
-
-                        <h3 className="font-bold text-xl text-gray-900">4. No es Asesoría Financiera</h3>
-                        <p>Esta calculadora <strong>NO constituye</strong> asesoría financiera, promesa de ingresos ni garantía de ganancias.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">5. Declaración de Ingresos</h3>
-                        <div className="bg-yellow-50 border border-yellow-300 p-4 rounded italic">
-                          <p className="text-sm">"Los resultados mostrados son proyecciones hipotéticas con fines ilustrativos únicamente. Los resultados reales varían ampliamente. El éxito requiere trabajo duro, dedicación y habilidades. La mayoría de los distribuidores no ganan ingresos significativos. Consulte la Declaración de Divulgación de Ingresos oficial de NN Protect."</p>
-                        </div>
-
-                        <h3 className="font-bold text-xl text-gray-900">6. Limitación de Responsabilidad</h3>
-                        <p>Los creadores de esta herramienta <strong>NO SERÁN RESPONSABLES</strong> por pérdidas económicas, decisiones tomadas basándose en los resultados, o errores en los cálculos.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">7. Uso Ético</h3>
-                        <p>Al compartir resultados de esta calculadora:</p>
-                        <ul className="list-disc list-inside pl-4 space-y-1">
-                          <li><strong>NO</strong> presente los resultados como garantías de ingreso</li>
-                          <li><strong>NO</strong> sugiera que son resultados típicos</li>
-                          <li><strong>SÍ</strong> deje claro que son proyecciones hipotéticas</li>
-                        </ul>
-
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-6">
-                          <p className="font-bold text-blue-900">📋 Nota Importante:</p>
-                          <p className="text-blue-800 mt-2">Esta herramienta NO ha sido creada, patrocinada ni avalada oficialmente por NN Protect.</p>
-                        </div>
-                      </div>
-
-                      <div className="border-t-2 border-gray-200 pt-6">
-                        <div className="flex items-start gap-3 mb-4">
-                          <input 
-                            type="checkbox" 
-                            id="accept-terms" 
-                            className="mt-1 w-5 h-5"
-                            onChange={(e) => {
-                              const btn = document.getElementById('accept-btn');
-                              btn.disabled = !e.target.checked;
-                            }}
-                          />
-                          <label htmlFor="accept-terms" className="text-gray-700 font-semibold">
-                            He leído y acepto todos los términos del descargo de responsabilidad. Entiendo que los resultados mostrados son proyecciones teóricas y no garantías de ganancias reales.
-                          </label>
-                        </div>
-                        
-                        <button
-                          id="accept-btn"
-                          disabled
-                          onClick={handleAcceptDisclaimer}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-xl text-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Acepto y Continuar a la Calculadora
-                        </button>
-                        
-                        <p className="text-center text-sm text-gray-500 mt-4">
-                          Al hacer clic en "Acepto", confirmas que has leído y comprendido este aviso legal.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-8">
                   <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
