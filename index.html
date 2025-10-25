@@ -8,26 +8,12 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-        }
-    </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useMemo } = React;
-
-        const Calculator = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="14"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>;
-        const Users = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-        const TrendingUp = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
-        const Award = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>;
-        const AlertTriangle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
-
+        
         const NNProtectCalculator = () => {
           const [directos, setDirectos] = useState(0);
           const [niveles, setNiveles] = useState(0);
@@ -35,12 +21,6 @@
           const [vg, setVg] = useState(0);
           const [showDisclaimer, setShowDisclaimer] = useState(true);
           const [acceptedTerms, setAcceptedTerms] = useState(false);
-
-          const handleAcceptDisclaimer = () => {
-            if (acceptedTerms) {
-              setShowDisclaimer(false);
-            }
-          };
 
           const rangos = [
             { nombre: 'Visionario', vgRequerido: 1465, unilevelNiveles: 3, infinito: 0 },
@@ -58,9 +38,7 @@
 
           const calcularRango = (vgTotal) => {
             for (let i = rangos.length - 1; i >= 0; i--) {
-              if (vgTotal >= rangos[i].vgRequerido) {
-                return rangos[i];
-              }
+              if (vgTotal >= rangos[i].vgRequerido) return rangos[i];
             }
             return { nombre: 'Sin Rango', vgRequerido: 0, unilevelNiveles: 0, infinito: 0 };
           };
@@ -71,413 +49,262 @@
             
             for (let nivel = 1; nivel <= niveles; nivel++) {
               const personas = Math.pow(directos, nivel);
-              const vgNivel = personas * vg;
-              vgTotalAcumulado += vgNivel;
-              estructura.push({ nivel, personas, vgNivel });
+              estructura.push({ nivel, personas, vgNivel: personas * vg });
+              vgTotalAcumulado += personas * vg;
             }
 
             const miRango = calcularRango(vgTotalAcumulado);
+            let bonoUnilevel = 0, bonoInfinito = 0, bonoMatch = 0;
+            const detalleUnilevel = [], detalleInfinito = [], detalleMatch = [];
             
-            let bonoUnilevel = 0;
-            const detalleUnilevel = [];
-            
+            // Bono Unilevel
             for (let i = 0; i < Math.min(niveles, 9); i++) {
-              const personas = estructura[i].personas;
-              const porcentaje = porcentajesUnilevel[i];
-              const comision = personas * vn * (porcentaje / 100);
+              const comision = estructura[i].personas * vn * (porcentajesUnilevel[i] / 100);
               bonoUnilevel += comision;
-              detalleUnilevel.push({
-                nivel: i + 1,
-                personas,
-                porcentaje,
-                comision
-              });
+              detalleUnilevel.push({ nivel: i + 1, personas: estructura[i].personas, porcentaje: porcentajesUnilevel[i], comision });
             }
 
-            let bonoInfinito = 0;
-            const detalleInfinito = [];
-            
+            // Bono Infinito
             if (niveles > 9 && miRango.infinito > 0) {
               const directosInfo = [];
-              const personasNivel1 = estructura[0].personas;
-              
-              for (let d = 0; d < personasNivel1; d++) {
+              for (let d = 0; d < directos; d++) {
                 let vgDirecto = vg;
-                for (let i = 1; i < niveles; i++) {
-                  vgDirecto += Math.pow(directos, i) * vg;
-                }
-                const rangoDirecto = calcularRango(vgDirecto);
-                directosInfo.push(rangoDirecto);
+                for (let i = 1; i < niveles; i++) vgDirecto += Math.pow(directos, i) * vg;
+                directosInfo.push(calcularRango(vgDirecto));
               }
               
               for (let i = 9; i < niveles; i++) {
-                const personas = estructura[i].personas;
-                const personasPorDirecto = personas / personasNivel1;
-                
                 let comisionNivel = 0;
-                
-                for (let d = 0; d < personasNivel1; d++) {
-                  const rangoDirecto = directosInfo[d];
-                  const diferenciador = Math.max(0, miRango.infinito - rangoDirecto.infinito);
-                  
-                  if (diferenciador > 0) {
-                    comisionNivel += personasPorDirecto * vn * (diferenciador / 100);
-                  }
+                for (let d = 0; d < directos; d++) {
+                  const dif = Math.max(0, miRango.infinito - directosInfo[d].infinito);
+                  if (dif > 0) comisionNivel += (estructura[i].personas / directos) * vn * (dif / 100);
                 }
-                
                 if (comisionNivel > 0) {
                   bonoInfinito += comisionNivel;
-                  
                   const diferenciales = {};
                   directosInfo.forEach(r => {
                     const dif = Math.max(0, miRango.infinito - r.infinito);
                     const key = `${r.nombre}-${dif}`;
-                    if (!diferenciales[key]) {
-                      diferenciales[key] = {
-                        rango: r.nombre,
-                        infinito: r.infinito,
-                        diferencial: dif,
-                        cantidad: 0
-                      };
-                    }
+                    if (!diferenciales[key]) diferenciales[key] = { rango: r.nombre, infinito: r.infinito, diferencial: dif, cantidad: 0 };
                     diferenciales[key].cantidad++;
                   });
-                  
-                  const detalleDiferenciales = Object.values(diferenciales);
-                  
-                  detalleInfinito.push({
-                    nivel: i + 1,
-                    personas,
-                    miInfinito: miRango.infinito,
-                    detalleDiferenciales,
-                    comision: comisionNivel
-                  });
+                  detalleInfinito.push({ nivel: i + 1, personas: estructura[i].personas, miInfinito: miRango.infinito, detalleDiferenciales: Object.values(diferenciales), comision: comisionNivel });
                 }
               }
             }
 
-            let bonoMatch = 0;
-            const detalleMatch = [];
-            
-            const nivelesMatch = miRango.nombre === 'Embajador Transformador' ? 1 :
-                                miRango.nombre === 'Embajador Inspirador' ? 2 :
-                                miRango.nombre === 'Embajador Consciente' ? 3 :
-                                miRango.nombre === 'Embajador Solidario' ? 4 : 0;
-
-            for (let i = 0; i < Math.min(nivelesMatch, 4); i++) {
-              const personas = estructura[i].personas;
-              
-              let vgEquipoPorPersona = vg;
-              for (let j = i + 1; j < niveles; j++) {
-                vgEquipoPorPersona += Math.pow(directos, j - i) * vg;
-              }
-              
-              const rangoPersona = calcularRango(vgEquipoPorPersona);
-              
+            // Bono Match
+            const nivelesMatch = miRango.nombre === 'Embajador Transformador' ? 1 : miRango.nombre === 'Embajador Inspirador' ? 2 : miRango.nombre === 'Embajador Consciente' ? 3 : miRango.nombre === 'Embajador Solidario' ? 4 : 0;
+            for (let i = 0; i < Math.min(nivelesMatch, 4, niveles); i++) {
+              let vgEquipo = vg;
+              for (let j = i + 1; j < niveles; j++) vgEquipo += Math.pow(directos, j - i) * vg;
+              const rangoPersona = calcularRango(vgEquipo);
               let bonoUnilevelPersona = 0;
-              const nivelesDisponibles = Math.min(niveles - i - 1, rangoPersona.unilevelNiveles);
-              
-              for (let k = 0; k < nivelesDisponibles; k++) {
-                const personasEnNivel = Math.pow(directos, k + 1);
-                if (k < 9) {
-                  bonoUnilevelPersona += personasEnNivel * vn * (porcentajesUnilevel[k] / 100);
-                }
+              const nivDisp = Math.min(niveles - i - 1, rangoPersona.unilevelNiveles);
+              for (let k = 0; k < nivDisp && k < 9; k++) bonoUnilevelPersona += Math.pow(directos, k + 1) * vn * (porcentajesUnilevel[k] / 100);
+              if (nivDisp > 9 && rangoPersona.infinito > 0) {
+                for (let k = 9; k < nivDisp; k++) bonoUnilevelPersona += Math.pow(directos, k + 1) * vn * (rangoPersona.infinito / 100);
               }
-              
-              if (nivelesDisponibles > 9 && rangoPersona.infinito > 0) {
-                for (let k = 9; k < nivelesDisponibles; k++) {
-                  const personasEnNivel = Math.pow(directos, k + 1);
-                  bonoUnilevelPersona += personasEnNivel * vn * (rangoPersona.infinito / 100);
-                }
-              }
-              
-              const porcentajeMatch = porcentajesMatch[i];
-              const comisionMatch = personas * bonoUnilevelPersona * (porcentajeMatch / 100);
+              const comisionMatch = estructura[i].personas * bonoUnilevelPersona * (porcentajesMatch[i] / 100);
               bonoMatch += comisionMatch;
-              
-              detalleMatch.push({
-                nivel: i + 1,
-                personas,
-                rangoPersona: rangoPersona.nombre,
-                bonoUnilevelPersona,
-                porcentajeMatch,
-                comisionMatch
-              });
+              detalleMatch.push({ nivel: i + 1, personas: estructura[i].personas, rangoPersona: rangoPersona.nombre, bonoUnilevelPersona, porcentajeMatch: porcentajesMatch[i], comisionMatch });
             }
 
-            return {
-              estructura,
-              vgTotal: vgTotalAcumulado,
-              miRango,
-              bonoUnilevel,
-              detalleUnilevel,
-              bonoInfinito,
-              detalleInfinito,
-              bonoMatch,
-              detalleMatch,
-              totalGanancias: bonoUnilevel + bonoInfinito + bonoMatch
-            };
+            return { estructura, vgTotal: vgTotalAcumulado, miRango, bonoUnilevel, detalleUnilevel, bonoInfinito, detalleInfinito, bonoMatch, detalleMatch, totalGanancias: bonoUnilevel + bonoInfinito + bonoMatch };
           }, [directos, niveles, vn, vg]);
 
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6">
-              {showDisclaimer && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                  <div className="bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 rounded-t-2xl">
-                      <div className="flex items-center gap-3 text-white">
-                        <AlertTriangle />
-                        <h2 className="text-3xl font-bold">AVISO LEGAL IMPORTANTE</h2>
-                      </div>
+          if (showDisclaimer) {
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 rounded-t-2xl">
+                    <h2 className="text-3xl font-bold text-white">⚠️ AVISO LEGAL IMPORTANTE</h2>
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                      <p className="font-bold text-red-800">⚠️ DESCARGO DE RESPONSABILIDAD</p>
+                      <p className="text-red-700 mt-2">Los resultados mostrados son PROYECCIONES TEÓRICAS únicamente. NO GARANTIZAN ganancias reales.</p>
                     </div>
-                    
-                    <div className="p-8 space-y-6">
-                      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                        <p className="font-bold text-red-800 text-lg">⚠️ DESCARGO DE RESPONSABILIDAD</p>
-                        <p className="text-red-700 mt-2">Los resultados mostrados son PROYECCIONES TEÓRICAS únicamente. NO GARANTIZAN ganancias reales.</p>
-                      </div>
-
-                      <div className="space-y-4 text-gray-700">
-                        <h3 className="font-bold text-xl text-gray-900">1. Propósito de la Herramienta</h3>
-                        <p>Esta calculadora es una <strong>herramienta de simulación</strong> con fines educativos e ilustrativos. Su objetivo es ayudar a comprender la estructura del Plan de Compensación de NN Protect.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">2. No Garantía de Resultados</h3>
-                        <p>Los resultados reales pueden variar significativamente debido a:</p>
-                        <ul className="list-disc list-inside pl-4 space-y-1">
-                          <li>Desempeño individual de cada distribuidor</li>
-                          <li>Condiciones del mercado</li>
-                          <li>Esfuerzo y dedicación personal</li>
-                          <li>Habilidades de ventas y liderazgo</li>
-                          <li>Factores económicos externos</li>
-                        </ul>
-
-                        <h3 className="font-bold text-xl text-gray-900">3. Exactitud de los Cálculos</h3>
-                        <p>Esta herramienta es una <strong>simplificación</strong> del Plan de Compensación oficial y puede no reflejar todas las reglas y condiciones. <strong>Siempre consulte la documentación oficial de NN Protect.</strong></p>
-
-                        <h3 className="font-bold text-xl text-gray-900">4. No es Asesoría Financiera</h3>
-                        <p>Esta calculadora <strong>NO constituye</strong> asesoría financiera, promesa de ingresos ni garantía de ganancias.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">5. Declaración de Ingresos</h3>
-                        <div className="bg-yellow-50 border border-yellow-300 p-4 rounded italic">
-                          <p className="text-sm">"Los resultados mostrados son proyecciones hipotéticas con fines ilustrativos únicamente. Los resultados reales varían ampliamente. El éxito requiere trabajo duro, dedicación y habilidades. La mayoría de los distribuidores no ganan ingresos significativos. Consulte la Declaración de Divulgación de Ingresos oficial de NN Protect."</p>
-                        </div>
-
-                        <h3 className="font-bold text-xl text-gray-900">6. Limitación de Responsabilidad</h3>
-                        <p>Los creadores de esta herramienta <strong>NO SERÁN RESPONSABLES</strong> por pérdidas económicas, decisiones tomadas basándose en los resultados, o errores en los cálculos.</p>
-
-                        <h3 className="font-bold text-xl text-gray-900">7. Uso Ético</h3>
-                        <p>Al compartir resultados de esta calculadora:</p>
-                        <ul className="list-disc list-inside pl-4 space-y-1">
-                          <li><strong>NO</strong> presente los resultados como garantías de ingreso</li>
-                          <li><strong>NO</strong> sugiera que son resultados típicos</li>
-                          <li><strong>SÍ</strong> deje claro que son proyecciones hipotéticas</li>
-                        </ul>
-                      </div>
-
-                      <div className="border-t-2 border-gray-200 pt-6">
-                        <div className="flex items-start gap-3 mb-4">
-                          <input 
-                            type="checkbox" 
-                            id="accept-terms" 
-                            className="mt-1 w-5 h-5"
-                            onChange={(e) => setAcceptedTerms(e.target.checked)}
-                          />
-                          <label htmlFor="accept-terms" className="text-gray-700 font-semibold cursor-pointer">
-                            He leído y acepto todos los términos del descargo de responsabilidad. Entiendo que los resultados mostrados son proyecciones teóricas y no garantías de ganancias reales.
-                          </label>
-                        </div>
-                        
-                        <button
-                          onClick={handleAcceptDisclaimer}
-                          disabled={!acceptedTerms}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-xl text-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Acepto y Continuar a la Calculadora
-                        </button>
-                        
-                        <p className="text-center text-sm text-gray-500 mt-4">
-                          Al hacer clic en "Acepto", confirmas que has leído y comprendido este aviso legal.
-                        </p>
-                      </div>
+                    <div className="space-y-3 text-sm text-gray-700">
+                      <p><strong>1. Propósito:</strong> Herramienta de simulación con fines educativos.</p>
+                      <p><strong>2. No Garantía:</strong> Los resultados reales varían por desempeño, mercado, esfuerzo y habilidades.</p>
+                      <p><strong>3. Exactitud:</strong> Simplificación del plan oficial. Consulte documentación oficial de NN Protect.</p>
+                      <p><strong>4. No es Asesoría:</strong> NO constituye asesoría financiera ni garantía de ganancias.</p>
+                      <p><strong>5. Uso Ético:</strong> NO presente como garantías. SÍ indique que son proyecciones hipotéticas.</p>
+                    </div>
+                    <div className="border-t-2 pt-4">
+                      <label className="flex items-start gap-3 mb-4 cursor-pointer">
+                        <input type="checkbox" className="mt-1 w-5 h-5" onChange={(e) => setAcceptedTerms(e.target.checked)} />
+                        <span className="text-sm font-semibold">He leído y acepto el descargo de responsabilidad.</span>
+                      </label>
+                      <button onClick={() => acceptedTerms && setShowDisclaimer(false)} disabled={!acceptedTerms} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl disabled:opacity-50">
+                        Acepto y Continuar
+                      </button>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            );
+          }
 
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6">
               <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-8">
-                  <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-                    <Calculator />
-                    Calculadora NN Protect
-                  </h1>
-                  <p className="text-blue-200">Plan de Compensación - Simulador de Ganancias</p>
-                </div>
+                <h1 className="text-4xl font-bold text-white text-center mb-2">Calculadora NN Protect</h1>
+                <p className="text-blue-200 text-center mb-8">Plan de Compensación - Simulador de Ganancias</p>
 
                 <div className="bg-white rounded-xl shadow-2xl p-6 mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Parámetros de Simulación</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Directos (Nivel 1)
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={directos}
-                        onChange={(e) => setDirectos(parseInt(e.target.value) || 1)}
-                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Niveles de Profundidad
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={niveles}
-                        onChange={(e) => setNiveles(parseInt(e.target.value) || 1)}
-                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        VN por Miembro
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="10"
-                        value={vn}
-                        onChange={(e) => setVn(parseFloat(e.target.value) || 0)}
-                        className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none text-lg font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        VG por Miembro
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="10"
-                        value={vg}
-                        onChange={(e) => setVg(parseFloat(e.target.value) || 0)}
-                        className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-lg font-semibold"
-                      />
-                    </div>
+                  <h2 className="text-2xl font-bold mb-4">Parámetros de Simulación</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[
+                      { label: 'Directos (Nivel 1)', value: directos, setter: setDirectos, min: 1, max: 20 },
+                      { label: 'Niveles de Profundidad', value: niveles, setter: setNiveles, min: 1 },
+                      { label: 'VN por Miembro', value: vn, setter: setVn, min: 0 },
+                      { label: 'VG por Miembro', value: vg, setter: setVg, min: 0 }
+                    ].map((field, idx) => (
+                      <div key={idx}>
+                        <label className="block text-sm font-semibold mb-2">{field.label}</label>
+                        <input type="number" min={field.min} max={field.max} value={field.value} onChange={(e) => field.setter(parseInt(e.target.value) || 0)} className="w-full px-4 py-3 border-2 rounded-lg text-lg font-semibold" />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-xl p-6 text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Users />
-                      <h3 className="text-lg font-semibold">Total Equipo</h3>
-                    </div>
-                    <p className="text-4xl font-bold">
-                      {calculos.estructura.reduce((sum, n) => sum + n.personas, 0).toLocaleString()}
-                    </p>
-                    <p className="text-blue-100 text-sm mt-1">personas en tu red</p>
+                  <div className="bg-blue-600 rounded-xl p-6 text-white">
+                    <h3 className="font-semibold mb-2">Total Equipo</h3>
+                    <p className="text-4xl font-bold">{calculos.estructura.reduce((s, n) => s + n.personas, 0).toLocaleString()}</p>
                   </div>
-
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-xl p-6 text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <TrendingUp />
-                      <h3 className="text-lg font-semibold">Volumen Total (VG)</h3>
-                    </div>
-                    <p className="text-4xl font-bold">
-                      {calculos.vgTotal.toLocaleString()}
-                    </p>
-                    <p className="text-purple-100 text-sm mt-1">volumen de grupo</p>
+                  <div className="bg-purple-600 rounded-xl p-6 text-white">
+                    <h3 className="font-semibold mb-2">Volumen Total (VG)</h3>
+                    <p className="text-4xl font-bold">{calculos.vgTotal.toLocaleString()}</p>
                   </div>
-
-                  <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-xl p-6 text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Award />
-                      <h3 className="text-lg font-semibold">Tu Rango</h3>
-                    </div>
-                    <p className="text-3xl font-bold">
-                      {calculos.miRango.nombre}
-                    </p>
-                    <p className="text-orange-100 text-sm mt-1">rango calificado</p>
+                  <div className="bg-orange-500 rounded-xl p-6 text-white">
+                    <h3 className="font-semibold mb-2">Tu Rango</h3>
+                    <p className="text-3xl font-bold">{calculos.miRango.nombre}</p>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-2xl p-8 mb-6 text-white">
-                  <h2 className="text-3xl font-bold mb-4 text-center">💰 GANANCIAS TOTALES</h2>
-                  <div className="text-center">
-                    <p className="text-6xl font-bold mb-2">
-                      ${calculos.totalGanancias.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    </p>
-                    <div className="flex justify-center gap-8 mt-4 text-sm">
-                      <div>
-                        <p className="text-green-100">Bono Unilevel</p>
-                        <p className="font-semibold text-xl">${calculos.bonoUnilevel.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                      </div>
-                      <div>
-                        <p className="text-green-100">Bono Infinito</p>
-                        <p className="font-semibold text-xl">${calculos.bonoInfinito.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                      </div>
-                      <div>
-                        <p className="text-green-100">Bono Match</p>
-                        <p className="font-semibold text-xl">${calculos.bonoMatch.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                      </div>
-                    </div>
+                <div className="bg-green-600 rounded-xl p-8 mb-6 text-white text-center">
+                  <h2 className="text-3xl font-bold mb-2">💰 GANANCIAS TOTALES</h2>
+                  <p className="text-6xl font-bold mb-4">${calculos.totalGanancias.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                  <div className="flex justify-center gap-8 text-sm">
+                    <div><p>Bono Unilevel</p><p className="text-xl font-bold">${calculos.bonoUnilevel.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>
+                    <div><p>Bono Infinito</p><p className="text-xl font-bold">${calculos.bonoInfinito.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>
+                    <div><p>Bono Match</p><p className="text-xl font-bold">${calculos.bonoMatch.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-xl shadow-xl p-6">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-blue-500 pb-2">
-                      📊 Bono Unilevel (Niveles 1-9)
-                    </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white rounded-xl p-6">
+                    <h3 className="text-xl font-bold mb-4 border-b-2 pb-2">📊 Bono Unilevel (1-9)</h3>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {calculos.detalleUnilevel.map((det) => (
-                        <div key={det.nivel} className="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
-                          <div>
-                            <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
-                            <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-600">{det.porcentaje}%</p>
-                            <p className="font-bold text-blue-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                          </div>
+                      {calculos.detalleUnilevel.map(d => (
+                        <div key={d.nivel} className="flex justify-between bg-blue-50 p-3 rounded">
+                          <span className="font-semibold">Nivel {d.nivel} ({d.personas.toLocaleString()})</span>
+                          <span className="font-bold text-blue-600">${d.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-4 pt-4 border-t-2 border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-lg">Subtotal Unilevel:</span>
-                        <span className="font-bold text-2xl text-blue-600">
-                          ${calculos.bonoUnilevel.toLocaleString(undefined, {minimumFractionDigits: 2})}
-                        </span>
-                      </div>
+                    <div className="mt-4 pt-4 border-t-2 flex justify-between">
+                      <span className="font-bold">Total:</span>
+                      <span className="font-bold text-2xl text-blue-600">${calculos.bonoUnilevel.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-xl p-6">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-500 pb-2">
-                      ♾️ Bono Infinito (Nivel 10+)
-                    </h3>
+                  <div className="bg-white rounded-xl p-6">
+                    <h3 className="text-xl font-bold mb-4 border-b-2 pb-2">♾️ Bono Infinito (10+)</h3>
                     {calculos.detalleInfinito.length > 0 ? (
                       <>
                         <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {calculos.detalleInfinito.map((det) => (
-                            <div key={det.nivel} className="bg-purple-50 p-3 rounded-lg">
-                              <div className="flex justify-between items-center mb-2">
-                                <div>
-                                  <span className="font-semibold text-gray-700">Nivel {det.nivel}</span>
-                                  <span className="text-sm text-gray-500 ml-2">({det.personas.toLocaleString()} personas)</span>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-bold text-purple-600">${det.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                </div>
+                          {calculos.detalleInfinito.map(d => (
+                            <div key={d.nivel} className="bg-purple-50 p-3 rounded">
+                              <div className="flex justify-between mb-2">
+                                <span className="font-semibold">Nivel {d.nivel} ({d.personas.toLocaleString()})</span>
+                                <span className="font-bold text-purple-600">${d.comision.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                               </div>
-                              <div className="text-xs text-gray-600 space-y-1">
-                                <p className="font-semibold">Breakaway por directos:</p>
-                                {det.detalleDiferenciales.map((dif, idx) => (
-                                  <div key={idx} className="pl-3">
-                                    <span className="font-medium">{dif.rango}</span> ({dif.cantidad}x): {det.miInfinito}% - {dif.infinito}% = <span className="font-bold text-purple-700">{dif.diferencial}%</span>
-                                  
+                              <div className="text-xs">
+                                <p className="font-semibold">Breakaway:</p>
+                                {d.detalleDiferenciales.map((dif, i) => (
+                                  <div key={i} className="pl-2">{dif.rango} ({dif.cantidad}x): {d.miInfinito}% - {dif.infinito}% = <span className="font-bold">{dif.diferencial}%</span></div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 pt-4 border-t-2 flex justify-between">
+                          <span className="font-bold">Total:</span>
+                          <span className="font-bold text-2xl text-purple-600">${calculos.bonoInfinito.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">{niveles <= 9 ? 'Necesitas más de 9 niveles' : 'Necesitas rango Embajador'}</p>
+                    )}
+                  </div>
+
+                  <div className="bg-white rounded-xl p-6 lg:col-span-2">
+                    <h3 className="text-xl font-bold mb-4 border-b-2 pb-2">🤝 Bono Match</h3>
+                    {calculos.detalleMatch.length > 0 ? (
+                      <>
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {calculos.detalleMatch.map(d => (
+                            <div key={d.nivel} className="bg-green-50 p-4 rounded">
+                              <div className="flex justify-between mb-2">
+                                <span className="font-semibold">Nivel {d.nivel} ({d.personas.toLocaleString()})</span>
+                                <span className="font-bold text-xl text-green-600">${d.comisionMatch.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                              </div>
+                              <div className="text-sm flex justify-between bg-white p-2 rounded">
+                                <span>Rango: <strong>{d.rangoPersona}</strong></span>
+                                <span>Unilevel c/u: <strong>${d.bonoUnilevelPersona.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong></span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 pt-4 border-t-2 flex justify-between">
+                          <span className="font-bold">Total:</span>
+                          <span className="font-bold text-2xl text-green-600">${calculos.bonoMatch.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">Necesitas rango Embajador Transformador o superior</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6">
+                  <h3 className="text-xl font-bold mb-4 border-b-2 pb-2">👥 Estructura del Equipo</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-blue-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Nivel</th>
+                          <th className="px-4 py-3 text-right">Personas</th>
+                          <th className="px-4 py-3 text-right">VG Nivel</th>
+                          <th className="px-4 py-3 text-right">VG Acum.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {calculos.estructura.map((e, i) => {
+                          const vgAcum = calculos.estructura.slice(0, i + 1).reduce((s, x) => s + x.vgNivel, 0);
+                          return (
+                            <tr key={e.nivel} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3 font-semibold">{e.nivel}</td>
+                              <td className="px-4 py-3 text-right">{e.personas.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right">{e.vgNivel.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right font-semibold text-blue-600">{vgAcum.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(<NNProtectCalculator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
